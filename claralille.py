@@ -18,7 +18,6 @@ oldID=None
 client.sendMsg(target_handler,"Hi, Clara Lille here!")
 try:
     while 1:
-        
         sleep(0.9) # o sleep evita sobrecarga. Evitando Travamentos demorados
         messagesblock,oldID = client.getMsg(target_handler,oldID)
         if messagesblock:
