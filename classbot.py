@@ -65,20 +65,27 @@ class Bot(object):
         sendMsg = self.sendMsg
         searchMessage = self.searchMessage
         try:
-            if msg.message.startswith('/isonline'):
+            if msg.message.startswith('/clara@isonline'):
                 sendMsg(target,"Yes I'm here, bitch. by Clara Lille")
-            if msg.message.startswith('/search'):
+            elif msg.message.startswith('/clara@source'):
+                sendMsg(target,"https://github.com/d34dfr4m3/Cl4r4Li1l3")
+            elif msg.message.startswith('/clara@acervo'):
+                sendMsg(target,'https://t.me/Ac3rv0b4t4t4')
+            elif msg.message.startswith('/clara@help'):
+                sendMsg(target,"Hello, My name is Clara Lille\nHere is the good stuff\n\t/clara@search -> Search files inside the Acervo\n\t/clara@isonline -> Check if i'm alive\n\t/clara@source -> My Source Code\n\t/clara@acervo -> Link to Acervo\n\t/clara@help -> This message")
+            elif 'portugol' in msg.message:
+                msg.delete()
+            elif 'clara is dead' in msg.message:
+                sendMsg(target, "huh go fuck yourself Ubisoft")
+            elif 'drugs' in msg.message:
+                sendMsg(target,'Alright, lets get high and hack some stuff')
+            elif msg.message.startswith('/clara@search'):
                 query=msg.message.split()[1]
                 if query.find("pdf") != -1 or len(query) == 1:
                     self.msg_reply(msg, "Put in your ass", target)
                     return 0
                 searchMessage(msg,acervo,target,query)
             
-            if msg.message.find("portugol") != -1:
-                msg.delete()
-            
-            if msg.message.find("clara is dead") != -1:
-                sendMsg(target, "Dead is your mother")
             
         except Exception as error:
             pass
