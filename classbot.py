@@ -4,11 +4,15 @@ from telethon.tl.types import InputMessagesFilterDocument
 from telethon.tl.functions.messages import SearchRequest
 from telethon.tl.types import InputMessagesFilterEmpty
 from telethon import utils
+import requests
+import io
+import re
+
 class Bot(object):
     def __init__(self, bot):
         self.bot = bot
         self.maxmsg = 1000
-        self.MSG_oldID = ""
+        #self.MSG_oldID = ""
     def owner(self):
         bot = self.bot
         return bot.get_me()
@@ -28,15 +32,15 @@ class Bot(object):
     def getEntity(self,target):
         bot = self.bot
         return bot.client.get_entity(target)
-    def getMsg(self,target,oldID):
+    def getMsg(self,target,oldID=None):
         bot = self.bot
         MSG = bot.get_messages(target)
         newID=MSG[0].id
         msgBlock = []
         if oldID == None:
-            oldID=newID-5
-        print("NEW ID %s OLD ID %s" %(newID, oldID))
+            oldID=newID
         if isinstance(oldID, int) and isinstance(newID, int) and oldID != newID:
+            print("NEW ID %s OLD ID %s" % (newID, oldID))
             for message in bot.iter_messages(target, limit=newID-oldID):
                 msgBlock.append(message)
         if len(msgBlock) == 0:
@@ -64,37 +68,70 @@ class Bot(object):
         bot = self.bot
         sendMsg = self.sendMsg
         searchMessage = self.searchMessage
+        interaction = { '/clara@isonline':"Yes I'm here, bitch. by Clara Lille"
+                        ,'/clara@source':"https://github.com/d34dfr4m3/Cl4r4Li1l3"
+                        ,'/clara@acervo':'https://t.me/Ac3rv0b4t4t4'
+                        ,'/clara@help': "Hello, My name is Clara Lille\nHere is the good stuff\n\t/clara@search -> Search files inside the Acervo\n\t/clara@isonline -> Check if i'm alive\n\t/clara@source -> My Source Code\n\t/clara@acervo -> Link to Acervo\n\t/clara@shellcode -> [Shellcode API](http://shell-storm.org/shellcode/), try this: `/clara@shellcode linux /bin/bash`\n\t/clara@help -> This message"
+                        }
         try:
-            if msg.message.startswith('/clara@isonline'):
-                sendMsg(target,"Yes I'm here, bitch. by Clara Lille")
-            elif msg.message.startswith('/clara@source'):
-                sendMsg(target,"https://github.com/d34dfr4m3/Cl4r4Li1l3")
-            elif msg.message.startswith('/clara@acervo'):
-                sendMsg(target,'https://t.me/Ac3rv0b4t4t4')
-            elif msg.message.startswith('/clara@help'):
-                sendMsg(target,"Hello, My name is Clara Lille\nHere is the good stuff\n\t/clara@search -> Search files inside the Acervo\n\t/clara@isonline -> Check if i'm alive\n\t/clara@source -> My Source Code\n\t/clara@acervo -> Link to Acervo\n\t/clara@help -> This message")
-            elif 'portugol' in msg.message:
-                msg.delete()
-            elif 'clara is dead' in msg.message:
-                sendMsg(target, "huh go fuck yourself Ubisoft")
-            elif 'drugs' in msg.message:
-                sendMsg(target,'Alright, lets get high and hack some stuff')
-            elif msg.message.startswith('/clara@search'):
-                query=msg.message.split()[1]
+            searchObj = re.search(r'/clara@\w+', msg.message)
+            if msg.message.startswith('/clara@search'):
+                print("[+] Search Call")
+                query = msg.message.split()[1]
                 if query.find("pdf") != -1 or len(query) == 1:
                     self.msg_reply(msg, "Put in your ass", target)
                     return 0
-                searchMessage(msg,acervo,target,query)
-            
-            
+                searchMessage(msg, acervo, target, query)
+
+
+            elif msg.message.startswith('/clara@shellcode'):
+                print("[+] Shellcode Call")
+
+                query = 'http://shell-storm.org/api/?s='
+                data = msg.message.split()
+                data.pop(0)
+                if len(data) == 1:
+                    query += data[0]
+                else:
+                    query += data[0]
+                    data.pop(0)
+                    for q in range(len(data)):
+                        query += '*' + data[q]
+
+                try:
+                    page = requests.get(query)
+                    buf = io.StringIO(page.text)
+                    if len(buf.readline()) == 0:
+                        self.msg_reply(msg, "F*ck, no luck with that bro!", target)
+                        return True
+                    aux = 0
+                    foobar="Have Fun!\n"
+                    while (len(buf.readline())) > aux:
+                        aux += 1
+                        line = buf.readline()
+                        linha = line.split('::::')
+                        foobar+=linha[0] + ' ' + linha[1] + ' [{}]({})\n'.format(linha[2], linha[4].replace('\n',''))
+                    self.msg_reply(msg, foobar, target)
+                except Exception as error:
+                    print("[!!] Feature: Shellcode : Error - ", error)
+
+            elif searchObj:
+                if searchObj.group() in interaction:
+                    self.msg_reply(msg, interaction[searchObj.group()], target)
+            elif 'clara is dead' in msg.message:
+                self.msg_reply(msg,"huh go fuck yourself Ubisoft",target)
+            elif 'drugs' in msg.message:
+                self.msg_reply(msg,'Alright, lets get high and hack some stuff',target)
+
         except Exception as error:
             pass
+
     def searchMessage(self,msg, acervo,target, string):
         bot = self.bot
         sendReply = self.msg_reply
         link = "https://t.me/"+acervo[1:]+"/"
         filter = InputMessagesFilterEmpty()
-        result= bot(SearchRequest(peer=acervo,q=string,filter=filter,min_date=None,max_date=None,offset_id=0,add_offset=0,limit=100,max_id=0,min_id=0,from_id=None,hash=0))
+        result = bot(SearchRequest(peer=acervo,q=string,filter=filter,min_date=None,max_date=None,offset_id=0,add_offset=0,limit=100,max_id=0,min_id=0,from_id=None,hash=0))
         payload = ''
 
         for i in range(len(result.messages)):
@@ -113,6 +150,7 @@ class Bot(object):
             sendReply(msg,payload,target)
         else:
             sendReply(msg,"Nenhum resultado foi encontrado.",target)
+
     def searchmedia(self, target, filename):
         bot = self.bot
         for message in bot.iter_messages(target, filter=InputMessagesFilterDocument):
